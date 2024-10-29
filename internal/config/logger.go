@@ -17,16 +17,40 @@ const (
 	DefaultLogBufferSize = 50
 )
 
+type JsonTemplate struct {
+	Name               string `json:"name" yaml:"name"`
+	LogLevelExpression string `json:"loglevel" yaml:"loglevel"`
+	DateTimeExpression string `json:"datetime" yaml:"datetime"`
+	MessageExpression  string `json:"message" yaml:"message"`
+}
+
+type JsonConfig struct {
+	GlobalExpressions string         `json:"globalExpressions" yaml:"globalExpressions"`
+	DefaultTemplate   string         `json:"defaultTemplate" yaml:"defaultTemplate"`
+	Templates         []JsonTemplate `json:"templates" yaml:"templates"`
+}
+
+// NewJsonConfig returns a new instance.
+func NewJsonConfig() JsonConfig {
+	return JsonConfig{
+		GlobalExpressions: "",
+		DefaultTemplate:   "",
+		Templates:         []JsonTemplate{},
+	}
+}
+
 // Logger tracks logger options.
 type Logger struct {
-	TailCount         int64 `json:"tail" yaml:"tail"`
-	BufferSize        int   `json:"buffer" yaml:"buffer"`
-	SinceSeconds      int64 `json:"sinceSeconds" yaml:"sinceSeconds"`
-	TextWrap          bool  `json:"textWrap" yaml:"textWrap"`
-	DisableAutoscroll bool  `json:"disableAutoscroll" yaml:"disableAutoscroll"`
-	ColumnLock        bool  `json:"columnLock" yaml:"columnLock"`
-	ShowTime          bool  `json:"showTime" yaml:"showTime"`
-	LogBufferSize     int   `json:"logBufferSize" yaml:"logBufferSize"`
+	TailCount         int64      `json:"tail" yaml:"tail"`
+	BufferSize        int        `json:"buffer" yaml:"buffer"`
+	SinceSeconds      int64      `json:"sinceSeconds" yaml:"sinceSeconds"`
+	TextWrap          bool       `json:"textWrap" yaml:"textWrap"`
+	DisableAutoscroll bool       `json:"disableAutoscroll" yaml:"disableAutoscroll"`
+	ColumnLock        bool       `json:"columnLock" yaml:"columnLock"`
+	ShowTime          bool       `json:"showTime" yaml:"showTime"`
+	LogBufferSize     int        `json:"logBufferSize" yaml:"logBufferSize"`
+	DecodeJson        bool       `json:"decodeJson" yaml:"decodeJson"`
+	JsonConfig        JsonConfig `json:"json" yaml:"json"`
 }
 
 // NewLogger returns a new instance.
@@ -36,6 +60,7 @@ func NewLogger() Logger {
 		BufferSize:    MaxLogThreshold,
 		SinceSeconds:  DefaultSinceSeconds,
 		LogBufferSize: DefaultLogBufferSize,
+		JsonConfig:    NewJsonConfig(),
 	}
 }
 

@@ -51,6 +51,7 @@ type Log struct {
 	follow            bool
 	columnLock        bool
 	requestOneRefresh bool
+	jsonForm          LogTemplateForm
 }
 
 var _ model.Component = (*Log)(nil)
@@ -74,10 +75,12 @@ func (l *Log) Init(ctx context.Context) (err error) {
 	}
 	l.model.Configure(l.app.Config.K9s.Logger)
 
+	l.jsonForm = *NewLogTemplateForm(l.app, &l.model.LogOptions().Json)
+
 	l.SetBorder(true)
 	l.SetDirection(tview.FlexRow)
 
-	l.indicator = NewLogIndicator(l.app.Config, l.app.Styles, l.isContainerLogView())
+	l.indicator = NewLogIndicator(l.app.Config, l.app.Styles, l.isContainerLogView(), l.model.LogOptions().DecodeJson)
 	l.AddItem(l.indicator, 1, 1, false)
 	if !l.model.HasDefaultContainer() {
 		l.indicator.ToggleAllContainers()
@@ -107,6 +110,7 @@ func (l *Log) Init(ctx context.Context) (err error) {
 	l.columnLock = l.app.Config.K9s.Logger.ColumnLock
 
 	l.model.ToggleShowTimestamp(l.app.Config.K9s.Logger.ShowTime)
+	l.model.ToggleDecodeJson(l.app.Config.K9s.Logger.DecodeJson, ctx)
 
 	return nil
 }
@@ -227,6 +231,7 @@ func (l *Log) Start() {
 	l.model.Start(l.getContext())
 	l.model.AddListener(l)
 	l.app.Styles.AddListener(l)
+	l.jsonForm.model.AddListener(l)
 	l.logs.cmdBuff.AddListener(l)
 	l.logs.cmdBuff.AddListener(l.app.Prompt())
 	l.updateTitle()
@@ -238,6 +243,7 @@ func (l *Log) Stop() {
 	l.model.Stop()
 	l.cancel()
 	l.app.Styles.RemoveListener(l)
+	l.jsonForm.model.RemoveListener(l)
 	l.logs.cmdBuff.RemoveListener(l)
 	l.logs.cmdBuff.RemoveListener(l.app.Prompt())
 }
@@ -263,6 +269,9 @@ func (l *Log) bindKeys() {
 		ui.KeyShiftL:    ui.NewKeyAction("Toggle ColumnLock", l.toggleColumnLockCmd, true),
 		ui.KeyF:         ui.NewKeyAction("Toggle FullScreen", l.toggleFullScreenCmd, true),
 		ui.KeyT:         ui.NewKeyAction("Toggle Timestamp", l.toggleTimestampCmd, true),
+		ui.KeyJ:         ui.NewKeyAction("Toggle JSON Decode", l.toggleDecodeJsonCmd, true),
+		ui.KeyShiftJ:    ui.NewKeyAction("JSON Templates…", l.jsonForm.showJsonTemplatesCmd, true),
+		tcell.KeyCtrlJ:  ui.NewKeyAction("Iterate JSON Tmpl.", l.iterateJsonTemplateCmd, true),
 		ui.KeyW:         ui.NewKeyAction("Toggle Wrap", l.toggleTextWrapCmd, true),
 		tcell.KeyCtrlS:  ui.NewKeyAction("Save", l.SaveCmd, true),
 		ui.KeyC:         ui.NewKeyAction("Copy", cpCmd(l.app.Flash(), l.logs.TextView), true),
@@ -270,6 +279,17 @@ func (l *Log) bindKeys() {
 	if l.model.HasDefaultContainer() {
 		l.logs.Actions().Add(ui.KeyA, ui.NewKeyAction("Toggle AllContainers", l.toggleAllContainers, true))
 	}
+}
+
+// JsonTemplateChanged indicates template was changed.
+func (l *Log) JsonTemplateChanged() {
+	l.updateTitle()
+	l.model.Restart(l.getContext())
+}
+
+func (l *Log) iterateJsonTemplateCmd(evt *tcell.EventKey) *tcell.EventKey {
+	l.model.LogOptions().Json.IterateToNextTemplate()
+	return nil
 }
 
 func (l *Log) resetCmd(evt *tcell.EventKey) *tcell.EventKey {
@@ -328,6 +348,11 @@ func (l *Log) updateTitle() {
 		title += ui.SkinTitle(fmt.Sprintf(logFmt, path, since), &styles)
 	} else {
 		title += ui.SkinTitle(fmt.Sprintf(logCoFmt, path, co, since), &styles)
+	}
+
+	if l.model.LogOptions().DecodeJson {
+		jsonTemplateName := l.model.LogOptions().Json.GetCurrentTemplate().Name
+		title += ui.SkinTitle(fmt.Sprintf("[[::b]%s[-::]] ", jsonTemplateName), &styles)
 	}
 
 	buff := l.logs.cmdBuff.GetText()
@@ -486,6 +511,16 @@ func (l *Log) toggleTimestampCmd(evt *tcell.EventKey) *tcell.EventKey {
 	l.indicator.ToggleTimestamp()
 	l.model.ToggleShowTimestamp(l.indicator.showTime)
 	l.indicator.Refresh()
+
+	return nil
+}
+
+func (l *Log) toggleDecodeJsonCmd(evt *tcell.EventKey) *tcell.EventKey {
+	l.indicator.ToggleDecodeJson()
+	ctx := l.getContext()
+	l.model.ToggleDecodeJson(l.indicator.decodeJson, ctx)
+	l.indicator.Refresh()
+	l.updateTitle()
 
 	return nil
 }

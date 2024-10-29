@@ -135,7 +135,29 @@
             "disableAutoscroll": {"type": "boolean"},
             "columnLock": {"type": "boolean"},
             "showTime": {"type": "boolean"},
-            "logBufferSize": {"type": "integer"}
+            "logBufferSize": {"type": "integer"},
+            "decodeJson": {"type": "boolean"},
+            "json": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "globalExpressions": {"type": "string"},
+                "defaultTemplate": {"type": "string"},
+                "templates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {"type": "string"},
+                      "loglevel": {"type": "string"},
+                      "datetime": {"type": "string"},
+                      "message": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "thresholds": {

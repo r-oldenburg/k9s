@@ -28,6 +28,8 @@ type LogOptions struct {
 	ShowTimestamp    bool
 	AllContainers    bool
 	LogBufferSize    int
+	DecodeJson       bool
+	Json             JsonOptions
 }
 
 // Info returns the option pod and container info.
@@ -55,6 +57,8 @@ func (o *LogOptions) Clone() *LogOptions {
 		SinceSeconds:     o.SinceSeconds,
 		AllContainers:    o.AllContainers,
 		LogBufferSize:    o.LogBufferSize,
+		DecodeJson:       o.DecodeJson,
+		Json:             o.Json,
 	}
 }
 
