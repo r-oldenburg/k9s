@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os/exec"
 	"sync"
 	"time"
 
@@ -479,30 +478,13 @@ func readLogs(ctx context.Context, stream io.ReadCloser, out chan<- *LogItem, op
 			)
 		}
 	}()
-	if opts.DecodeJson {
-		cmd := exec.Command("jq", "--unbuffered", "-R", "-r", opts.Json.GetCurrentJsonQuery())
-		cmd.Stdin = bufio.NewReader(stream)
-		newStream, err := cmd.StdoutPipe()
-		if err != nil {
-			log.Warn().Err(err).Msg("log-reader error on STDOUT pipe for jq")
-		}
-		newCombinedStream, err := cmd.StderrPipe()
-		if err != nil {
-			log.Warn().Err(err).Msg("log-reader error on STDERR pipe for jq")
-		}
-		stream = io.NopCloser(io.MultiReader(newStream, newCombinedStream))
-
-		if err := cmd.Start(); err != nil {
-			log.Warn().Err(err).Msgf("Could not start jq")
-		}
-	}
 
 	r := bufio.NewReader(stream)
 
 	for {
 		bytes, err := r.ReadBytes('\n')
 		if err == nil {
-			item := opts.ToLogItem(tview.EscapeBytes(bytes))
+			item := opts.ToLogItem(tview.EscapeBytes(opts.HandleJson(bytes)))
 			select {
 			case <-ctx.Done():
 				return streamCanceled
