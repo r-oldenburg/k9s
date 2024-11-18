@@ -507,7 +507,7 @@ func readLogs(ctx context.Context, stream io.ReadCloser, out chan<- *LogItem, op
 	for {
 		bytes, err := r.ReadBytes('\n')
 		if err == nil {
-			item := opts.ToLogItem(tview.EscapeBytes(bytes))
+			item := opts.ToLogItem(tview.EscapeBytes(opts.HandleJson(bytes)))
 			select {
 			case <-ctx.Done():
 				return streamCanceled

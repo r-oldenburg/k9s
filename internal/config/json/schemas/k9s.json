@@ -141,6 +141,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "debug": {"type": "boolean"},
                 "globalExpressions": {"type": "string"},
                 "defaultTemplate": {"type": "string"},
                 "templates": {
