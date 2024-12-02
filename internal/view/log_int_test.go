@@ -30,7 +30,7 @@ func TestLogAutoScroll(t *testing.T) {
 	assert.Len(t, v.Hints(), 18)
 
 	v.toggleAutoScrollCmd(nil)
-	assert.Equal(t, "Autoscroll:Off     ColumnLock:Off     FullScreen:Off     Timestamps:Off     Wrap:Off", v.Indicator().GetText(true))
+	assert.Equal(t, "Autoscroll:Off     ColumnLock:Off     FullScreen:Off     Timestamps:Off     Json:Off     Wrap:Off", v.Indicator().GetText(true))
 }
 
 func TestLogColumnLock(t *testing.T) {
@@ -103,7 +103,7 @@ func TestLogTimestamp(t *testing.T) {
 		&dao.LogItem{
 			Pod:       "fred/blee",
 			Container: "c1",
-			Bytes:     []byte("ttt Testing 1, 2, 3\n"),
+			Bytes:     []byte("1999-12-31T19ttt Testing 1, 2, 3\n"),
 		},
 	)
 	var list logList
@@ -115,7 +115,7 @@ func TestLogTimestamp(t *testing.T) {
 	ii.Lines(0, true, ll)
 	l.Flush(ll)
 
-	assert.Equal(t, fmt.Sprintf("%-30s %s", "ttt", "fred/blee c1 Testing 1, 2, 3\n"), l.Logs().GetText(true))
+	assert.Equal(t, fmt.Sprintf("%s %s", "1999-12-31T19ttt", "fred/blee c1 Testing 1, 2, 3\n"), l.Logs().GetText(true))
 	assert.Equal(t, 2, list.change)
 	assert.Equal(t, 2, list.clear)
 	assert.Equal(t, 0, list.fail)

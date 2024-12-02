@@ -42,6 +42,12 @@ k9s:
     columnLock: false
     showTime: false
     logBufferSize: 50
+    decodeJson: false
+    json:
+      debug: false
+      globalExpressions: ""
+      defaultTemplate: ""
+      templates: []
   thresholds:
     cpu:
       critical: 90
