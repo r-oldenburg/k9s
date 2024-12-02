@@ -4,7 +4,7 @@
 package dao
 
 import (
-	bytes "bytes"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
